@@ -9,6 +9,7 @@ local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 
 local utils = require("run.utils")
+local config = require("run.config")
 
 -----------------------------------------------------------
 -- Export
@@ -17,6 +18,27 @@ local M = {}
 
 local run_action = function(action)
     vim.notify("Running action: " .. action["name"])
+
+    -- Create Terminal Buffer
+    local buffer = api.nvim_create_buf(false, true)
+    local h, w = o.lines, o.columns
+
+    M.win = api.nvim_open_win(buffer, true, {
+        relative = "editor",
+        width = w - math.floor(w * config.ui.gap),
+        height = h - math.floor(h * config.ui.gap) - 1,
+        col = math.floor(w * config.ui.gap / 2),
+        row = math.floor(h * config.ui.gap / 2) - 2,
+        border = config.ui.border,
+        style = "minimal",
+    })
+
+    api.nvim_win_set_option(M.win, "winhl", "NormalFloat:" .. config.ui.bg .. ",FloatBorder:" .. config.ui.border_cl)
+
+    cmd("terminal " .. (action["cmd"] or "Invalid action!"))
+    vim.schedule(function()
+        vim.cmd("startinsert")
+    end)
 end
 
 local pick_action = function(run_actions, run_filename)
@@ -60,6 +82,11 @@ function M.run()
 end
 
 function M.setup(opts)
+    for a, _ in pairs(opts or {}) do
+        for c, d in pairs(opts[a] or {}) do
+            config[a][c] = d
+        end
+    end
     api.nvim_create_user_command("Run", M.run, {})
 end
 

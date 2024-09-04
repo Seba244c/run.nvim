@@ -1,8 +1,10 @@
 [
     {
-        "name": "Foo"
+        "name": "Foo",
+        "cmd": "echo Foo"
     },
     {
-        "name": "Baz"
+        "name": "Baz",
+        "cmd": "ani-cli"
     }
 ]
