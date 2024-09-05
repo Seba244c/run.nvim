@@ -10,6 +10,7 @@ local action_state = require("telescope.actions.state")
 
 local utils = require("run.utils")
 local config = require("run.config")
+local run_actions = require("run.run_actions")
 
 -----------------------------------------------------------
 -- Export
@@ -41,11 +42,11 @@ local run_action = function(action)
     end)
 end
 
-local pick_action = function(run_actions, run_filename)
+local pick_action = function(avail_actions)
     local opts = require("telescope.themes").get_dropdown({})
     local action_names = {}
     local action_map = {}
-    for index, action in ipairs(run_actions) do
+    for index, action in ipairs(avail_actions) do
         local name = utils.get_action_name(action)
         table.insert(action_names, name)
         action_map[name] = action
@@ -53,7 +54,7 @@ local pick_action = function(run_actions, run_filename)
 
     pickers
         .new(opts, {
-            prompt_title = "Run:: " .. run_filename,
+            prompt_title = "Run: " .. fn.expand("%"),
             finder = finders.new_table({
                 results = action_names,
             }),
@@ -71,14 +72,14 @@ local pick_action = function(run_actions, run_filename)
 end
 
 function M.run()
-    local run_file = utils.find_file_in_dirs("run.json", { utils.get_parent_dir(vim.fn.expand("%:p")), fn.getcwd() })
-    if not run_file then
+    local run_files = run_actions.get_available_run_files()
+    if not #run_files == 0 then
         vim.notify("run.json not found in the workspace", vim.log.levels.WARN)
         return
     end
 
-    local run_actions = utils.load_json_file(run_file)
-    pick_action(run_actions, run_file)
+    local avail_actions = run_actions.add_actions_from_files({}, run_files)
+    pick_action(avail_actions)
 end
 
 function M.setup(opts)

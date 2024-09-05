@@ -16,11 +16,15 @@ function M.get_parent_dir(file)
     return file:match("(.*)/[^/]+$")
 end
 
+function M.file_exist(file)
+    return fn.empty(fn.glob(file)) == 0
+end
+
 ---@return string|nil
 function M.find_file_in_dirs(filename, dirs)
     for i, dir in ipairs(dirs) do
         local test = dir .. "/" .. filename
-        if fn.empty(fn.glob(test)) == 0 then
+        if M.file_exist(test) == 0 then
             return test
         end
     end
